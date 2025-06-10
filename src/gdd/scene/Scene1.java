@@ -4,6 +4,7 @@ import static gdd.Global.*;
 import gdd.sprite.Enemy;
 import gdd.sprite.Player;
 import gdd.sprite.Shot;
+import gdd.sprite.Explosion; // ADD: Import the new Explosion class
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -24,6 +25,7 @@ public class Scene1 extends JPanel {
     private List<Enemy> enemies;
     private Player player;
     private List<Shot> shots;
+    private List<Explosion> explosions; // ADD: List to store active explosions
 
     private int direction = -1;
     private int deaths = 0;
@@ -60,7 +62,6 @@ public class Scene1 extends JPanel {
 
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 6; j++) {
-
                 var enemy = new Enemy(ALIEN_INIT_X + (ALIEN_WIDTH + ALIEN_GAP) * j,
                         ALIEN_INIT_Y + (ALIEN_HEIGHT + ALIEN_GAP) * i);
                 enemies.add(enemy);
@@ -68,7 +69,8 @@ public class Scene1 extends JPanel {
         }
 
         player = new Player();
-        shots = new ArrayList<>(); // Initialize shots list instead of single shot
+        shots = new ArrayList<>();
+        explosions = new ArrayList<>(); // ADD: Initialize explosions list
     }
 
     private void drawAliens(Graphics g) {
@@ -102,7 +104,7 @@ public class Scene1 extends JPanel {
     }
 
     private void drawShot(Graphics g) {
-        // Render all shots in the list
+        // Changes: Render all shots in the list instead of single shot
         for (Shot shot : shots) {
             if (shot.isVisible()) {
                 g.drawImage(shot.getImage(), shot.getX(), shot.getY(), this);
@@ -138,13 +140,13 @@ public class Scene1 extends JPanel {
 
         if (inGame) {
 
-            g.drawLine(0, GROUND,
-                    BOARD_WIDTH, GROUND);
+            g.drawLine(0, GROUND, BOARD_WIDTH, GROUND);
 
             drawAliens(g);
             drawPlayer(g);
             drawShot(g);
             drawBombing(g);
+            drawExplosions(g); // ADD: Draw explosions
 
             // Add your name here
             g.drawString("Min Thet Naung ( 6530142 )", 10, 10);
@@ -187,53 +189,61 @@ public class Scene1 extends JPanel {
             timer.stop();
             message = "Game won!";
         }
-    
+
         // player
         player.act();
-    
-        // shots - handle multiple shots
+
+        // shots - handle multiple shots with proper cleanup
         List<Shot> toRemove = new ArrayList<>();
-        
+
         for (Shot shot : shots) {
             if (shot.isVisible()) {
                 int shotX = shot.getX();
                 int shotY = shot.getY();
-    
+
                 for (Enemy enemy : enemies) {
                     // Collision detection: shot and enemy
                     int enemyX = enemy.getX();
                     int enemyY = enemy.getY();
-    
+
                     if (enemy.isVisible() && shot.isVisible()
                             && shotX >= (enemyX)
                             && shotX <= (enemyX + ALIEN_WIDTH)
                             && shotY >= (enemyY)
                             && shotY <= (enemyY + ALIEN_HEIGHT)) {
-    
+
+                        // CHANGE: Create explosion at enemy position before enemy dies
+                        explosions.add(new Explosion(enemyX, enemyY));
+
                         var ii = new ImageIcon(IMG_EXPLOSION);
                         enemy.setImage(ii.getImage());
                         enemy.setDying(true);
                         deaths++;
                         shot.die();
-                        toRemove.add(shot); // Add to removal list
+                        toRemove.add(shot);
                     }
                 }
-    
+
+                // Move shot upward
                 int y = shot.getY();
-                y -= 10; // increase bullet speed
-    
+                y -= 15; // increase bullet speed
+
+                // Check if shot went off screen
                 if (y < 0) {
                     shot.die();
-                    toRemove.add(shot); // Add to removal list
+                    // CHANGE: Add shot to removal list
+                    toRemove.add(shot);
                 } else {
                     shot.setY(y);
                 }
             } else {
-                toRemove.add(shot); // Add dead shots to removal list
+                // CHANGE: Add dead shots to removal list
+                toRemove.add(shot);
             }
         }
-        
-        // Remove dead shots from the list
+
+        // CHANGE: Remove all dead shots from the active shots list
+        // This prevents memory leaks and keeps the list clean
         shots.removeAll(toRemove);
 
         // enemies
@@ -336,16 +346,47 @@ public class Scene1 extends JPanel {
         @Override
         public void keyPressed(KeyEvent e) {
             player.keyPressed(e);
-    
+
             int x = player.getX();
             int y = player.getY();
-    
+
             int key = e.getKeyCode();
-    
+
             // Allow up to 4 bullets on screen
             if (key == KeyEvent.VK_SPACE && inGame && shots.size() < 4) {
                 shots.add(new Shot(x, y));
             }
         }
     }
+
+    private void drawExplosions(Graphics g) {
+        // Create list to track explosions that need to be removed
+        List<Explosion> toRemove = new ArrayList<>();
+
+        for (Explosion explosion : explosions) {
+            if (explosion.isVisible()) {
+                // Draw the explosion
+                g.drawImage(explosion.getImage(), explosion.getX(), explosion.getY(), this);
+
+                // Countdown the explosion's visible frames
+                explosion.visibleCountDown();
+
+                // If explosion is no longer visible, mark for removal
+                if (!explosion.isVisible()) {
+                    toRemove.add(explosion);
+                }
+            } else {
+                // Add invisible explosions to removal list
+                toRemove.add(explosion);
+            }
+        }
+
+        // Remove all expired explosions from the list
+        explosions.removeAll(toRemove);
+    }
 }
+
+/**
+ * Draw all active explosions and manage their lifecycle
+ * Explosions are automatically removed after being displayed
+ */
