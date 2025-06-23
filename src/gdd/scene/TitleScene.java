@@ -118,16 +118,16 @@ public class TitleScene extends JPanel {
         // Draw smaller title image centered
         if (titleImage != null) {
             // Scale the image to be smaller (50% of original size)
-            int scaledWidth = titleImage.getIconWidth() / 2;
-            int scaledHeight = titleImage.getIconHeight() / 2;
+            int scaledWidth = titleImage.getIconWidth() / 2 + 150;
+            int scaledHeight = titleImage.getIconHeight() / 2 + 150;
             int x = (BOARD_WIDTH - scaledWidth) / 2;
-            int y = (BOARD_HEIGHT - scaledHeight) / 2 - 80;
+            int y = (BOARD_HEIGHT - scaledHeight) / 2 - 50;
 
             g.drawImage(titleImage.getImage(), x, y, scaledWidth, scaledHeight, this);
         }
 
         // Draw pixel-style "Press SPACE to start" text
-        drawPixelText(g, "PRESS 'SPACE' TO START", BOARD_WIDTH / 2, BOARD_HEIGHT - 120);
+        drawPixelText(g, "Press 'SPACE' To Start", BOARD_WIDTH / 2, BOARD_HEIGHT - 120);
 
         Toolkit.getDefaultToolkit().sync();
     }
@@ -159,7 +159,7 @@ public class TitleScene extends JPanel {
             }
         }
 
-        // Draw main text in bright green (retro style)
+        // Draw main text in bright orange (retro style)
         g2d.setColor(Color.ORANGE);
         g2d.drawString(text, textX, y);
 
