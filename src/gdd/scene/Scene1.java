@@ -4,7 +4,7 @@ import static gdd.Global.*;
 import gdd.sprite.Enemy;
 import gdd.sprite.Player;
 import gdd.sprite.Shot;
-import gdd.sprite.Explosion; // ADD: Import the new Explosion class
+import gdd.sprite.Explosion;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -25,12 +25,13 @@ public class Scene1 extends JPanel {
     private List<Enemy> enemies;
     private Player player;
     private List<Shot> shots;
-    private List<Explosion> explosions; // ADD: List to store active explosions
+    private List<Explosion> explosions;
 
     private int direction = -1;
     private int deaths = 0;
 
     private boolean inGame = true;
+    private boolean started = false;
     private String message = "Game Over";
 
     private final Dimension d = new Dimension(BOARD_WIDTH, BOARD_HEIGHT);
@@ -39,25 +40,34 @@ public class Scene1 extends JPanel {
     private Timer timer;
 
     public Scene1() {
-
         initBoard();
-        gameInit();
     }
 
     private void initBoard() {
-
         addKeyListener(new TAdapter());
         setFocusable(true);
         setBackground(Color.black);
 
+        // Don't start timer automatically
         timer = new Timer(DELAY, new GameCycle());
-        timer.start();
-
-        gameInit();
+    }
+    
+    public void startScene() {
+        if (!started) {
+            started = true;
+            gameInit();
+            timer.start();
+        }
+    }
+    
+    public void stopScene() {
+        if (timer != null && timer.isRunning()) {
+            timer.stop();
+        }
+        started = false;
     }
 
     private void gameInit() {
-
         enemies = new ArrayList<>();
 
         for (int i = 0; i < 4; i++) {
@@ -70,34 +80,25 @@ public class Scene1 extends JPanel {
 
         player = new Player();
         shots = new ArrayList<>();
-        explosions = new ArrayList<>(); // ADD: Initialize explosions list
+        explosions = new ArrayList<>();
     }
 
     private void drawAliens(Graphics g) {
-
         for (Enemy enemy : enemies) {
-
             if (enemy.isVisible()) {
-
                 g.drawImage(enemy.getImage(), enemy.getX(), enemy.getY(), this);
             }
-
             if (enemy.isDying()) {
-
                 enemy.die();
             }
         }
     }
 
     private void drawPlayer(Graphics g) {
-
         if (player.isVisible()) {
-
             g.drawImage(player.getImage(), player.getX(), player.getY(), this);
         }
-
         if (player.isDying()) {
-
             player.die();
             inGame = false;
         }
