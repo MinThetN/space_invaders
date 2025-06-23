@@ -6,14 +6,14 @@ import javax.swing.ImageIcon;
 public class Enemy extends Sprite {
 
     private Bomb bomb;
+    private int directionX = -1; // Horizontal direction (-1 for left, 1 for right)
+    private int directionY = 1; // Vertical direction (1 for down)
 
     public Enemy(int x, int y) {
-
         initEnemy(x, y);
     }
 
     private void initEnemy(int x, int y) {
-
         this.x = x;
         this.y = y;
 
@@ -29,12 +29,22 @@ public class Enemy extends Sprite {
     }
 
     public void act(int direction) {
+        // Move diagonally towards corner
+        this.x += directionX; // Move horizontally
+        this.y += directionY; // Move vertically down
 
-        this.x += direction;
+        // Reverse horizontal direction when hitting screen borders
+        if (this.x >= BOARD_WIDTH - BORDER_RIGHT) {
+            directionX = -1; // Move left
+        } else if (this.x <= BORDER_LEFT) {
+            directionX = 1; // Move right
+        }
+
+        // Continue moving down (towards bottom corner)
+        // You can add logic here to reverse Y direction if needed
     }
 
     public Bomb getBomb() {
-
         return bomb;
     }
 

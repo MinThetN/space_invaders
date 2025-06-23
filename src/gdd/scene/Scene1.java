@@ -149,7 +149,6 @@ public class Scene1 extends JPanel {
             drawBombing(g);
             drawExplosions(g); // ADD: Draw explosions
 
-            // Add your name here
             g.drawString("Min Thet Naung ( 6530142 )", 10, 10);
 
         } else {
