@@ -29,6 +29,10 @@ public class Scene1 extends JPanel {
 
     private int direction = -1;
     private int deaths = 0;
+    private int currentWave = 0;
+    private int totalEnemiesInCurrentWave = 0;
+    private boolean waitingForNextWave = false;
+    private Timer waveTimer;
 
     private boolean inGame = true;
     private boolean started = false;
@@ -64,23 +68,71 @@ public class Scene1 extends JPanel {
         if (timer != null && timer.isRunning()) {
             timer.stop();
         }
+        if (waveTimer != null && waveTimer.isRunning()) {
+            waveTimer.stop();
+        }
         started = false;
     }
 
     private void gameInit() {
         enemies = new ArrayList<>();
-
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 6; j++) {
-                var enemy = new Enemy(ALIEN_INIT_X + (ALIEN_WIDTH + ALIEN_GAP) * j,
-                        ALIEN_INIT_Y + (ALIEN_HEIGHT + ALIEN_GAP) * i);
-                enemies.add(enemy);
-            }
-        }
-
         player = new Player();
         shots = new ArrayList<>();
         explosions = new ArrayList<>();
+        
+        currentWave = 0;
+        deaths = 0;
+        waitingForNextWave = false;
+        
+        spawnWave();
+    }
+
+    private void spawnWave() {
+        if (currentWave >= WAVE_ENEMY_COUNTS.length) {
+            // All waves completed
+            inGame = false;
+            message = "All waves completed! You won!";
+            return;
+        }
+
+        enemies.clear();
+        int enemyCount = WAVE_ENEMY_COUNTS[currentWave];
+        totalEnemiesInCurrentWave = enemyCount;
+        deaths = 0;
+        
+        // Calculate grid dimensions based on enemy count
+        int cols = Math.min(enemyCount, 6); // Max 6 columns
+        int rows = (int) Math.ceil((double) enemyCount / cols);
+        
+        int enemiesSpawned = 0;
+        for (int i = 0; i < rows && enemiesSpawned < enemyCount; i++) {
+            for (int j = 0; j < cols && enemiesSpawned < enemyCount; j++) {
+                var enemy = new Enemy(ALIEN_INIT_X + (ALIEN_WIDTH + ALIEN_GAP) * j,
+                        ALIEN_INIT_Y + (ALIEN_HEIGHT + ALIEN_GAP) * i);
+                enemies.add(enemy);
+                enemiesSpawned++;
+            }
+        }
+        
+        currentWave++;
+        waitingForNextWave = false;
+    }
+
+    private void checkWaveCompletion() {
+        if (deaths >= totalEnemiesInCurrentWave && !waitingForNextWave) {
+            waitingForNextWave = true;
+            
+            // Start timer for next wave
+            waveTimer = new Timer(WAVE_DELAY, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    spawnWave();
+                    waveTimer.stop();
+                }
+            });
+            waveTimer.setRepeats(false);
+            waveTimer.start();
+        }
     }
 
     private void drawAliens(Graphics g) {
@@ -183,12 +235,8 @@ public class Scene1 extends JPanel {
     }
 
     private void update() {
-
-        if (deaths == NUMBER_OF_ALIENS_TO_DESTROY) {
-            inGame = false;
-            timer.stop();
-            message = "Game won!";
-        }
+        // Check wave completion instead of fixed number
+        checkWaveCompletion();
 
         // player
         player.act();

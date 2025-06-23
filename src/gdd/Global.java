@@ -22,11 +22,14 @@ public class Global {
     public static final int ALIEN_GAP = 30; // Gap between aliens
 
     public static final int GO_DOWN = 30; // Doubled from 15
-    public static final int NUMBER_OF_ALIENS_TO_DESTROY = 24;
     public static final int CHANCE = 5;
     public static final int DELAY = 17;
     public static final int PLAYER_WIDTH = 30; // Doubled from 15
     public static final int PLAYER_HEIGHT = 20; // Doubled from 10
+
+    // Wave system constants
+    public static final int[] WAVE_ENEMY_COUNTS = { 4, 8, 12, 18 };
+    public static final int WAVE_DELAY = 2000; // 2 seconds between waves
 
     // Images
     public static final String IMG_ENEMY = "src/images/alien.png";
