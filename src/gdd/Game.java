@@ -26,16 +26,17 @@ public class Game extends JFrame {
         setResizable(false);
         setLocationRelativeTo(null);
     }
-    
+
     public void switchToGame() {
         if (inTitle) {
+            titleScene.cleanup(); // Clean up audio resources
             titleScene.stopScene();
             remove(titleScene);
-            
+
             gameScene = new Scene1();
             add(gameScene);
             gameScene.startScene();
-            
+
             inTitle = false;
             revalidate();
             repaint();

@@ -13,6 +13,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.IOException;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.Timer;
@@ -23,6 +30,7 @@ public class TitleScene extends JPanel {
     private final Dimension d = new Dimension(BOARD_WIDTH, BOARD_HEIGHT);
     private Timer timer;
     private Game parentGame;
+    private Clip backgroundMusic;
 
     public TitleScene() {
         initBoard();
@@ -36,8 +44,45 @@ public class TitleScene extends JPanel {
         // Load title image
         titleImage = new ImageIcon("src/images/title.png");
 
+        // Load and prepare background music
+        loadBackgroundMusic();
+
         // Don't start timer automatically
         timer = new Timer(DELAY, new GameCycle());
+    }
+
+    private void loadBackgroundMusic() {
+        try {
+            // Try to load the WAV file first, then MP3 as fallback
+            File audioFile = new File("src/audio/title.wav");
+            if (!audioFile.exists()) {
+                audioFile = new File("src/audio/title.mp3");
+            }
+
+            if (audioFile.exists()) {
+                AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(audioFile);
+                backgroundMusic = AudioSystem.getClip();
+                backgroundMusic.open(audioInputStream);
+            } else {
+                System.out.println("Audio file not found: title.wav or title.mp3");
+            }
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            System.out.println("Error loading background music: " + e.getMessage());
+            backgroundMusic = null;
+        }
+    }
+
+    private void playBackgroundMusic() {
+        if (backgroundMusic != null) {
+            backgroundMusic.setFramePosition(0); // Reset to beginning
+            backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY); // Loop the music
+        }
+    }
+
+    private void stopBackgroundMusic() {
+        if (backgroundMusic != null && backgroundMusic.isRunning()) {
+            backgroundMusic.stop();
+        }
     }
 
     public void setParentGame(Game game) {
@@ -48,6 +93,7 @@ public class TitleScene extends JPanel {
         if (!started) {
             started = true;
             timer.start();
+            playBackgroundMusic(); // Start playing music when scene starts
         }
     }
 
@@ -55,6 +101,7 @@ public class TitleScene extends JPanel {
         if (timer != null && timer.isRunning()) {
             timer.stop();
         }
+        stopBackgroundMusic(); // Stop music when scene stops
         started = false;
     }
 
@@ -94,7 +141,7 @@ public class TitleScene extends JPanel {
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
 
         // Use a monospace font for pixel effect
-        Font pixelFont = new Font(Font.MONOSPACED, Font.BOLD, 20);
+        Font pixelFont = new Font(Font.MONOSPACED, Font.BOLD, 30);
         g2d.setFont(pixelFont);
 
         // Draw text with pixel-style border effect
@@ -113,7 +160,7 @@ public class TitleScene extends JPanel {
         }
 
         // Draw main text in bright green (retro style)
-        g2d.setColor(Color.GREEN);
+        g2d.setColor(Color.ORANGE);
         g2d.drawString(text, textX, y);
 
         // Add blinking effect
@@ -147,6 +194,14 @@ public class TitleScene extends JPanel {
                     parentGame.switchToGame();
                 }
             }
+        }
+    }
+
+    // Clean up resources when the scene is destroyed
+    public void cleanup() {
+        stopBackgroundMusic();
+        if (backgroundMusic != null) {
+            backgroundMusic.close();
         }
     }
 }
