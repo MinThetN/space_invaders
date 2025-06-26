@@ -20,6 +20,14 @@ import java.util.Random;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.Timer;
+// ADD: Audio imports
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.File;
+import java.io.IOException;
 
 public class Scene1 extends JPanel {
     private List<Enemy> enemies;
@@ -43,6 +51,11 @@ public class Scene1 extends JPanel {
 
     private Timer timer;
 
+    // ADD: Audio clips for sound effects
+    private Clip shootSound;
+    private Clip explosionSound;
+    private Clip backgroundMusic;
+
     public Scene1() {
         initBoard();
     }
@@ -52,24 +65,40 @@ public class Scene1 extends JPanel {
         setFocusable(true);
         setBackground(Color.black);
 
+        // ADD: Load audio effects
+        loadAudioEffects();
+    
         // Don't start timer automatically
         timer = new Timer(DELAY, new GameCycle());
     }
-    
+
     public void startScene() {
         if (!started) {
             started = true;
             gameInit();
             timer.start();
+            // ADD: Start background music
+            playBackgroundMusic();
         }
     }
-    
+
     public void stopScene() {
         if (timer != null && timer.isRunning()) {
             timer.stop();
         }
         if (waveTimer != null && waveTimer.isRunning()) {
             waveTimer.stop();
+        }
+        // ADD: Stop background music and clean up audio resources
+        stopBackgroundMusic();
+        if (shootSound != null) {
+            shootSound.close();
+        }
+        if (explosionSound != null) {
+            explosionSound.close();
+        }
+        if (backgroundMusic != null) {
+            backgroundMusic.close();
         }
         started = false;
     }
@@ -79,11 +108,11 @@ public class Scene1 extends JPanel {
         player = new Player();
         shots = new ArrayList<>();
         explosions = new ArrayList<>();
-        
+
         currentWave = 0;
         deaths = 0;
         waitingForNextWave = false;
-        
+
         spawnWave();
     }
 
@@ -99,11 +128,11 @@ public class Scene1 extends JPanel {
         int enemyCount = WAVE_ENEMY_COUNTS[currentWave];
         totalEnemiesInCurrentWave = enemyCount;
         deaths = 0;
-        
+
         // Calculate grid dimensions based on enemy count
         int cols = Math.min(enemyCount, 6); // Max 6 columns
         int rows = (int) Math.ceil((double) enemyCount / cols);
-        
+
         int enemiesSpawned = 0;
         for (int i = 0; i < rows && enemiesSpawned < enemyCount; i++) {
             for (int j = 0; j < cols && enemiesSpawned < enemyCount; j++) {
@@ -113,7 +142,7 @@ public class Scene1 extends JPanel {
                 enemiesSpawned++;
             }
         }
-        
+
         currentWave++;
         waitingForNextWave = false;
     }
@@ -121,7 +150,7 @@ public class Scene1 extends JPanel {
     private void checkWaveCompletion() {
         if (deaths >= totalEnemiesInCurrentWave && !waitingForNextWave) {
             waitingForNextWave = true;
-            
+
             // Start timer for next wave
             waveTimer = new Timer(WAVE_DELAY, new ActionListener() {
                 @Override
@@ -262,7 +291,10 @@ public class Scene1 extends JPanel {
 
                         // CHANGE: Create explosion at enemy position before enemy dies
                         explosions.add(new Explosion(enemyX, enemyY));
-
+                        
+                        // ADD: Play explosion sound effect
+                        playSound(explosionSound);
+                    
                         var ii = new ImageIcon(IMG_EXPLOSION);
                         enemy.setImage(ii.getImage());
                         enemy.setDying(true);
@@ -394,15 +426,17 @@ public class Scene1 extends JPanel {
         @Override
         public void keyPressed(KeyEvent e) {
             player.keyPressed(e);
-
+    
             int x = player.getX();
             int y = player.getY();
-
+    
             int key = e.getKeyCode();
-
+    
             // Allow up to 4 bullets on screen
             if (key == KeyEvent.VK_SPACE && inGame && shots.size() < 4) {
                 shots.add(new Shot(x, y));
+                // ADD: Play shooting sound effect
+                playSound(shootSound);
             }
         }
     }
@@ -432,9 +466,67 @@ public class Scene1 extends JPanel {
         // Remove all expired explosions from the list
         explosions.removeAll(toRemove);
     }
-}
 
-/**
- * Draw all active explosions and manage their lifecycle
- * Explosions are automatically removed after being displayed
- */
+    private void loadAudioEffects() {
+        // Load shooting sound (you can use any short audio file or create one)
+        loadSound("shootSound", "src/audio/title.wav"); // Using existing file as placeholder
+
+        // Load explosion sound
+        loadSound("explosionSound", "src/audio/scene2.wav"); // Using existing file as placeholder
+
+        // Load background music
+        loadSound("backgroundMusic", "src/audio/scene2.wav");
+    }
+
+    private void loadSound(String soundType, String filePath) {
+        try {
+            File audioFile = new File(filePath);
+            if (audioFile.exists()) {
+                AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(audioFile);
+                Clip clip = AudioSystem.getClip();
+                clip.open(audioInputStream);
+
+                switch (soundType) {
+                    case "shootSound":
+                        shootSound = clip;
+                        break;
+                    case "explosionSound":
+                        explosionSound = clip;
+                        break;
+                    case "backgroundMusic":
+                        backgroundMusic = clip;
+                        break;
+                }
+            } else {
+                System.out.println("Audio file not found: " + filePath);
+            }
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            System.out.println("Error loading sound " + soundType + ": " + e.getMessage());
+        }
+    }
+
+    private void playSound(Clip clip) {
+        if (clip != null) {
+            // Stop if already playing
+            if (clip.isRunning()) {
+                clip.stop();
+            }
+            // Reset to beginning and play
+            clip.setFramePosition(0);
+            clip.start();
+        }
+    }
+
+    private void playBackgroundMusic() {
+        if (backgroundMusic != null) {
+            backgroundMusic.setFramePosition(0);
+            backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
+        }
+    }
+
+    private void stopBackgroundMusic() {
+        if (backgroundMusic != null && backgroundMusic.isRunning()) {
+            backgroundMusic.stop();
+        }
+    }
+}
