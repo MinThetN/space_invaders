@@ -67,7 +67,7 @@ public class Scene1 extends JPanel {
 
         // ADD: Load audio effects
         loadAudioEffects();
-    
+
         // Don't start timer automatically
         timer = new Timer(DELAY, new GameCycle());
     }
@@ -291,10 +291,10 @@ public class Scene1 extends JPanel {
 
                         // CHANGE: Create explosion at enemy position before enemy dies
                         explosions.add(new Explosion(enemyX, enemyY));
-                        
+
                         // ADD: Play explosion sound effect
                         playSound(explosionSound);
-                    
+
                         var ii = new ImageIcon(IMG_EXPLOSION);
                         enemy.setImage(ii.getImage());
                         enemy.setDying(true);
@@ -426,12 +426,12 @@ public class Scene1 extends JPanel {
         @Override
         public void keyPressed(KeyEvent e) {
             player.keyPressed(e);
-    
+
             int x = player.getX();
             int y = player.getY();
-    
+
             int key = e.getKeyCode();
-    
+
             // Allow up to 4 bullets on screen
             if (key == KeyEvent.VK_SPACE && inGame && shots.size() < 4) {
                 shots.add(new Shot(x, y));
@@ -468,14 +468,14 @@ public class Scene1 extends JPanel {
     }
 
     private void loadAudioEffects() {
-        // Load shooting sound (you can use any short audio file or create one)
-        loadSound("shootSound", "src/audio/title.wav"); // Using existing file as placeholder
+        // Load shooting sound
+        loadSound("shootSound", "src/audio/funny_2.wav"); // Using existing file as placeholder
 
         // Load explosion sound
-        loadSound("explosionSound", "src/audio/scene2.wav"); // Using existing file as placeholder
+        loadSound("explosionSound", "src/audio/explosion.wav"); // Using existing file as placeholder
 
         // Load background music
-        loadSound("backgroundMusic", "src/audio/scene2.wav");
+        loadSound("backgroundMusic", "src/audio/funny.wav");
     }
 
     private void loadSound(String soundType, String filePath) {

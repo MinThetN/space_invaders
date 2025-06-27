@@ -54,9 +54,9 @@ public class TitleScene extends JPanel {
     private void loadBackgroundMusic() {
         try {
             // Try to load the WAV file first, then MP3 as fallback
-            File audioFile = new File("src/audio/title.wav");
+            File audioFile = new File("src/audio/funny_3.wav");
             if (!audioFile.exists()) {
-                audioFile = new File("src/audio/title.mp3");
+                audioFile = new File("src/audio/Funny_3.mp3");
             }
 
             if (audioFile.exists()) {

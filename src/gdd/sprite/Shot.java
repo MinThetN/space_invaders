@@ -19,7 +19,7 @@ public class Shot extends Sprite {
     }
 
     private void initShot(int x, int y) {
-        // Create a custom colored bullet instead of using image
+        // Create a custom colored bullet
         createCustomBullet();
 
         setX(x + H_SPACE);
@@ -36,12 +36,9 @@ public class Shot extends Sprite {
         Graphics2D g2d = bulletImage.createGraphics();
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Set bullet color (change this to your preferred color)
         g2d.setColor(Color.CYAN); // Bright cyan bullet
-        // Alternative colors: Color.RED, Color.YELLOW, Color.GREEN, etc.
 
-        // Draw bullet shape (you can modify this for different styles)
-        // Option 1: Rectangle bullet
+        // Draw bullet shape
         g2d.fillRect(0, 0, BULLET_WIDTH * SCALE_FACTOR, BULLET_HEIGHT * SCALE_FACTOR);
         g2d.dispose();
         setImage(bulletImage);

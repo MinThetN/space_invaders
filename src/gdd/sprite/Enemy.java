@@ -28,20 +28,24 @@ public class Enemy extends Sprite {
         setImage(scaledImage);
     }
 
+    private int moveCounter = 0; // Add this field at the top of the class
+
     public void act(int direction) {
-        // Move diagonally towards corner
-        this.x += directionX; // Move horizontally
-        this.y += directionY; // Move vertically down
-
-        // Reverse horizontal direction when hitting screen borders
-        if (this.x >= BOARD_WIDTH - BORDER_RIGHT) {
-            directionX = -1; // Move left
-        } else if (this.x <= BORDER_LEFT) {
-            directionX = 1; // Move right
+        moveCounter++;
+        
+        // Move every 2 frames (half speed) or every 3 frames (one-third speed)
+        if (moveCounter % 2 == 0) {
+            // Move diagonally towards corner
+            this.x += directionX; // Move horizontally
+            this.y += directionY; // Move vertically down
+        
+            // Reverse horizontal direction when hitting screen borders
+            if (this.x >= BOARD_WIDTH - BORDER_RIGHT) {
+                directionX = -1; // Move left
+            } else if (this.x <= BORDER_LEFT) {
+                directionX = 1; // Move right
+            }
         }
-
-        // Continue moving down (towards bottom corner)
-        // You can add logic here to reverse Y direction if needed
     }
 
     public Bomb getBomb() {
